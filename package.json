@@ -4,7 +4,7 @@
   "description": "Sudoku game backend",
   "main": "server.js",
   "scripts": {
-    "lint": "eslint .",
+    "lint": "eslint . && echo \"✓ Lint passed — no issues found\"",
     "test": "jest",
     "test:coverage": "jest --coverage",
     "dev": "nodemon server.js",

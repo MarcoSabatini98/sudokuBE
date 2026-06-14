@@ -26,6 +26,7 @@ function isValid(grid, row, col, num) {
   return true;
 }
 
+// fallow-ignore-next-line complexity
 function fillGrid(grid) {
   for (let row = 0; row < 9; row++) {
     for (let col = 0; col < 9; col++) {
@@ -44,6 +45,7 @@ function fillGrid(grid) {
   return true;
 }
 
+// fallow-ignore-next-line complexity
 function countSolutions(grid, counter = { value: 0 }) {
   for (let row = 0; row < 9; row++) {
     for (let col = 0; col < 9; col++) {

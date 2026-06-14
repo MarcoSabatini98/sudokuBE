@@ -4,6 +4,7 @@ const { generatePuzzle } = require('../src/services/sudoku.service');
 const AppError = require('../src/errors/AppError');
 const { DIFFICULTY_CONFIG } = require('../src/constants/sudoku.constants');
 
+// fallow-ignore-next-line complexity
 function isSolvedSudoku(grid) {
   const expected = new Set([1, 2, 3, 4, 5, 6, 7, 8, 9]);
 

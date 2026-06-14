@@ -1,0 +1,7 @@
+{
+  "entry": [
+    "__tests__/setup.js",
+    "database/migrations/*.js"
+  ],
+  "ignoreDependencies": ["mysql2"]
+}

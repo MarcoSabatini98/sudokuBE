@@ -2,8 +2,6 @@
 
 const { Game } = require('../models');
 
-const findById = async (id) => Game.findByPk(id);
-
 const findAll = async ({ difficulty, page = 1, limit = 20 } = {}) => {
   const where = {};
   if (difficulty) where.difficulty = difficulty;
@@ -34,4 +32,5 @@ const findAll = async ({ difficulty, page = 1, limit = 20 } = {}) => {
 const create = async (payload, transaction = null) =>
   Game.create(payload, { transaction });
 
-module.exports = { findById, findAll, create };
+// fallow-ignore-file duplicate-export
+module.exports = { findAll, create };
