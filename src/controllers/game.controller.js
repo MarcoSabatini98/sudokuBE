@@ -21,4 +21,5 @@ const save = async (req, res, next) => {
   }
 };
 
+// fallow-ignore-file duplicate-export
 module.exports = { getAll, save };
