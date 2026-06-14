@@ -28,4 +28,5 @@ const upsert = async (difficulty, best_time_seconds, game_id, transaction = null
   return existing;
 };
 
+// fallow-ignore-file duplicate-export
 module.exports = { findAll, findByDifficulty, upsert };

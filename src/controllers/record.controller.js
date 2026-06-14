@@ -21,4 +21,5 @@ const getByDifficulty = async (req, res, next) => {
   }
 };
 
+// fallow-ignore-file duplicate-export
 module.exports = { getAll, getByDifficulty };
