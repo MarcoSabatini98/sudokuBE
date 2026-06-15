@@ -1,15 +1,7 @@
 'use strict';
 
-jest.mock('../src/config/db', () => ({
-  authenticate: jest.fn().mockResolvedValue(),
-  define: jest.fn(),
-}));
-
-jest.mock('../src/models', () => ({
-  sequelize: { transaction: jest.fn(), authenticate: jest.fn() },
-  Game: { findAll: jest.fn(), create: jest.fn(), hasOne: jest.fn() },
-  Record: { findOne: jest.fn(), create: jest.fn(), findAll: jest.fn(), belongsTo: jest.fn() },
-}));
+jest.mock('../src/config/db', () => require('./helpers/appMocks').mockDb());
+jest.mock('../src/models', () => require('./helpers/appMocks').mockCoreModels());
 
 const request = require('supertest');
 const app = require('../app');

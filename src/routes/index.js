@@ -6,5 +6,6 @@ router.use('/sudoku', require('./sudoku.routes'));
 router.use('/games', require('./game.routes'));
 router.use('/records', require('./record.routes'));
 router.use('/machiavelli', require('./machiavelli.routes'));
+router.use('/crossword', require('./crossword.routes'));
 
 module.exports = router;
