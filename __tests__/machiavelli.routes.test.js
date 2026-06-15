@@ -1,9 +1,6 @@
 'use strict';
 
-jest.mock('../src/config/db', () => ({
-  authenticate: jest.fn().mockResolvedValue(),
-  define: jest.fn(),
-}));
+jest.mock('../src/config/db', () => require('./helpers/appMocks').mockDb());
 
 jest.mock('../src/models', () => ({
   sequelize: { transaction: jest.fn(), authenticate: jest.fn() },
