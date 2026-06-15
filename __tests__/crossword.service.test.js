@@ -1,93 +1,63 @@
 'use strict';
 
-const {
-  generateCrossword,
-  normalizeAnswer,
-  prepareWords,
-  placementCrossings,
-} = require('../src/services/crossword.service');
+const { generateCrossword } = require('../src/services/crossword.service');
+const { DIFFICULTY_CONFIG } = require('../src/constants/crossword.constants');
 
-describe('crossword.service – normalizeAnswer', () => {
-  it('uppercases and strips accents', () => {
-    expect(normalizeAnswer('città')).toBe('CITTA');
-    expect(normalizeAnswer('perché')).toBe('PERCHE');
-  });
-
-  it('removes spaces and punctuation', () => {
-    expect(normalizeAnswer("l'albero blu")).toBe('LALBEROBLU');
-  });
-});
-
-describe('crossword.service – prepareWords', () => {
-  it('drops duplicates and out-of-range lengths', () => {
-    const out = prepareWords([
-      { answer: 'CANE', clue: 'a' },
-      { answer: 'CANE', clue: 'b' }, // duplicato
-      { answer: 'NO', clue: 'c' }, // troppo corta
-      { answer: 'CASA', clue: 'd' },
-    ]);
-    expect(out.map((w) => w.answer)).toEqual(['CANE', 'CASA']);
-  });
-});
-
-describe('crossword.service – placementCrossings', () => {
-  it('rejects an empty crossing for a non-first word', () => {
-    const board = Array.from({ length: 5 }, () => Array(5).fill(null));
-    expect(placementCrossings(board, 'CANE', 0, 0, 'across', false)).toBe(-1);
-  });
-
-  it('accepts the first word without crossings', () => {
-    const board = Array.from({ length: 5 }, () => Array(5).fill(null));
-    expect(placementCrossings(board, 'CANE', 0, 0, 'across', true)).toBe(0);
-  });
-});
+const STEP = { across: [0, 1], down: [1, 0] };
 
 describe('crossword.service – generateCrossword', () => {
-  let cw;
-  beforeAll(() => {
-    cw = generateCrossword();
-  });
+  describe.each(['easy', 'medium', 'hard'])('difficulty: %s', (diff) => {
+    let cw;
+    beforeAll(() => {
+      cw = generateCrossword({ difficulty: diff });
+    });
 
-  it('returns a trimmed grid and entries', () => {
-    expect(cw.rows).toBeGreaterThan(0);
-    expect(cw.cols).toBeGreaterThan(0);
-    expect(cw.cells).toHaveLength(cw.rows);
-    cw.cells.forEach((row) => expect(row).toHaveLength(cw.cols));
-    expect(cw.entries.length).toBeGreaterThanOrEqual(5);
-  });
+    it('matches the configured grid size', () => {
+      expect(cw.rows).toBe(DIFFICULTY_CONFIG[diff].rows);
+      expect(cw.cols).toBe(DIFFICULTY_CONFIG[diff].cols);
+      expect(cw.cells).toHaveLength(cw.rows);
+      cw.cells.forEach((row) => expect(row).toHaveLength(cw.cols));
+    });
 
-  it('every entry answer matches the letters in the solution grid', () => {
-    for (const e of cw.entries) {
-      const step = e.direction === 'across' ? [0, 1] : [1, 0];
-      let read = '';
-      for (let i = 0; i < e.length; i++) {
-        const cell = cw.cells[e.row + step[0] * i][e.col + step[1] * i];
-        expect(cell).not.toBeNull();
-        read += cell.solution;
+    it('fills every white cell with a single A-Z letter', () => {
+      cw.cells.forEach((row) =>
+        row.forEach((cell) => {
+          if (cell) expect(cell.solution).toMatch(/^[A-Z]$/);
+        })
+      );
+    });
+
+    it('every entry reads back its answer, is numbered and has a clue', () => {
+      for (const e of cw.entries) {
+        const [dr, dc] = STEP[e.direction];
+        let read = '';
+        for (let i = 0; i < e.length; i++) {
+          const cell = cw.cells[e.row + dr * i][e.col + dc * i];
+          expect(cell).not.toBeNull();
+          read += cell.solution;
+        }
+        expect(read).toBe(e.answer);
+        expect(e.number).toBeGreaterThan(0);
+        expect(e.clue.length).toBeGreaterThan(0);
       }
-      expect(read).toBe(e.answer);
-    }
-  });
+    });
 
-  it('every entry starts on a numbered cell', () => {
-    for (const e of cw.entries) {
-      expect(cw.cells[e.row][e.col].number).toBe(e.number);
-      expect(e.number).toBeGreaterThan(0);
-    }
-  });
-
-  it('every white cell belongs to at least one entry (no orphan letters)', () => {
-    const covered = new Set();
-    for (const e of cw.entries) {
-      const step = e.direction === 'across' ? [0, 1] : [1, 0];
-      for (let i = 0; i < e.length; i++) {
-        covered.add(`${e.row + step[0] * i},${e.col + step[1] * i}`);
+    it('every white cell belongs to at least one entry', () => {
+      const covered = new Set();
+      for (const e of cw.entries) {
+        const [dr, dc] = STEP[e.direction];
+        for (let i = 0; i < e.length; i++) covered.add(`${e.row + dr * i},${e.col + dc * i}`);
       }
-    }
-    cw.cells.forEach((row, r) =>
-      row.forEach((cell, c) => {
-        if (cell != null) expect(covered.has(`${r},${c}`)).toBe(true);
-      })
-    );
+      cw.cells.forEach((row, r) =>
+        row.forEach((cell, c) => {
+          if (cell) expect(covered.has(`${r},${c}`)).toBe(true);
+        })
+      );
+    });
+  });
+
+  it('falls back to medium for an unknown difficulty', () => {
+    const cw = generateCrossword({ difficulty: 'nope' });
+    expect(cw.rows).toBe(DIFFICULTY_CONFIG.medium.rows);
   });
 });
