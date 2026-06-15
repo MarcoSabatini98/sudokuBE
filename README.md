@@ -180,6 +180,37 @@ Tutti i response seguono il formato **JSend**:
 
 ---
 
+#### Macchiavelli
+
+Persistenza del gioco di carte Macchiavelli (1 umano vs 3 bot, logica e AI lato frontend).
+
+| Metodo | Path | Descrizione |
+|---|---|---|
+| `POST` | `/machiavelli` | Salva l'esito di una partita |
+| `GET`  | `/machiavelli` | Lista partite con paginazione |
+| `GET`  | `/machiavelli/records` | Miglior tempo di vittoria |
+
+**POST `/machiavelli` — body:**
+```json
+{ "won": true, "duration_seconds": 312 }
+```
+
+**GET `/machiavelli/records` — risposta:**
+```json
+{
+  "status": "success",
+  "data": {
+    "best_time_seconds": 240,
+    "best_game": { "id": 5, "won": true, "duration_seconds": 240 }
+  }
+}
+```
+`best_time_seconds` è `null` finché non c'è almeno una vittoria.
+
+> Tabella `machiavelli_games` creata dalla migration `20260615001-create-machiavelli-games.js`.
+
+---
+
 ### Test
 
 ```bash
@@ -408,6 +439,37 @@ All responses follow the **JSend** format:
   ]
 }
 ```
+
+---
+
+#### Macchiavelli
+
+Persistence for the Macchiavelli card game (1 human vs 3 bots, logic and AI on the frontend).
+
+| Method | Path | Description |
+|---|---|---|
+| `POST` | `/machiavelli` | Save a game result |
+| `GET`  | `/machiavelli` | List games with pagination |
+| `GET`  | `/machiavelli/records` | Best winning time |
+
+**POST `/machiavelli` — body:**
+```json
+{ "won": true, "duration_seconds": 312 }
+```
+
+**GET `/machiavelli/records` — response:**
+```json
+{
+  "status": "success",
+  "data": {
+    "best_time_seconds": 240,
+    "best_game": { "id": 5, "won": true, "duration_seconds": 240 }
+  }
+}
+```
+`best_time_seconds` is `null` until there is at least one win.
+
+> Table `machiavelli_games` created by migration `20260615001-create-machiavelli-games.js`.
 
 ---
 
