@@ -13,13 +13,14 @@ const { DIFFICULTIES } = require('../src/constants/crossword.constants');
 
 const COUNT = Number(process.env.PUZZLES_PER_DIFFICULTY) || 12;
 
-// Tiering del vocabolario per difficoltà:
-// - easy: solo parole comuni; più caselle nere (slot corti) e budget alto, così
-//   il pool ridotto basta. Offline il fill lento è accettabile.
-// - medium/hard: vocabolario completo (anche rare) come a runtime.
+// Tiering del vocabolario per difficoltà (offline il fill lento è accettabile):
+// - easy: solo parole facili (tier 0); più caselle nere (slot corti) e budget
+//   alto, così il pool ridotto basta.
+// - medium: parole facili + medie (tier ≤ 1).
+// - hard: vocabolario completo (anche rare).
 const TIER = {
-  easy: { commonOnly: true, maxFillSteps: 60000, blackRatio: 0.4 },
-  medium: {},
+  easy: { maxTier: 0, maxFillSteps: 60000, blackRatio: 0.4 },
+  medium: { maxTier: 1, maxFillSteps: 30000 },
   hard: {},
 };
 
@@ -28,8 +29,10 @@ function generateOne(difficulty) {
   try {
     return generateCrossword({ difficulty, ...opts });
   } catch (err) {
-    // easy common-only può non riempirsi su griglie con slot lunghi: ripiega al vocab pieno
-    if (opts.commonOnly) return generateCrossword({ difficulty });
+    // pool ristretto può non riempire: allarga di un tier mantenendo la difficoltà
+    if (opts.maxTier !== undefined) {
+      return generateCrossword({ difficulty, maxTier: opts.maxTier + 1, maxFillSteps: 60000 });
+    }
     throw err;
   }
 }

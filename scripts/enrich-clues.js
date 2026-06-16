@@ -29,21 +29,17 @@ function saveCache(cache) {
   fs.writeFileSync(CACHE_PATH, JSON.stringify(cache));
 }
 
-async function main() {
-  if (!(await isAvailable())) {
-    console.log('Ollama non disponibile: nessun arricchimento (restano le definizioni del dump).');
-    return;
-  }
-
-  const cache = loadCache();
-  let words = allEntries()
-    .filter((e) => e.common)
+/** Parole da arricchire: facili+medie (tier ≤ 1) non ancora in cache. */
+function selectWords(cache) {
+  const words = allEntries()
+    .filter((e) => e.tier <= 1)
     .map((e) => e.word)
-    .filter((w) => !cache[w]); // incrementale: salta quelle già in cache
-  if (LIMIT > 0) words = words.slice(0, LIMIT);
+    .filter((w) => !cache[w]);
+  return LIMIT > 0 ? words.slice(0, LIMIT) : words;
+}
 
-  console.log(`Arricchimento di ${words.length} parole comuni con ${process.env.OLLAMA_MODEL || 'llama3.2:3b'}...`);
-
+/** Genera le definizioni con Ollama, salvando la cache ogni 25 parole. */
+async function enrichLoop(words, cache) {
   let done = 0;
   for (const word of words) {
     const clue = await generateClue(word);
@@ -54,6 +50,19 @@ async function main() {
       console.log(`  ${done}/${words.length}`);
     }
   }
+}
+
+async function main() {
+  if (!(await isAvailable())) {
+    console.log('Ollama non disponibile: nessun arricchimento (restano le definizioni del dump).');
+    return;
+  }
+
+  const cache = loadCache();
+  const words = selectWords(cache);
+  console.log(`Arricchimento di ${words.length} parole con ${process.env.OLLAMA_MODEL || 'llama3.2:3b'}...`);
+
+  await enrichLoop(words, cache);
 
   saveCache(cache);
   console.log(`Fatto. Cache: ${Object.keys(cache).length} definizioni → ${CACHE_PATH}`);

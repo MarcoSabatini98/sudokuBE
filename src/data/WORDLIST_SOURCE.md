@@ -12,18 +12,26 @@ lunghezze 3-12 → deduplica → MAIUSCOLO.
 ## `crossword-dictionary.json` (dizionario con definizioni)
 
 Generato da `scripts/build-dictionary.js` analizzando il dump di
-**it.wiktionary.org** (sezione italiana di ogni voce, prima definizione, forme
-flesse escluse). Campi: `{ word, clue, common }`.
+**it.wiktionary.org** (sezione italiana di ogni voce, prima definizione **intera**,
+forme flesse escluse). Campi: `{ word, clue, tier }`.
+
+`tier` = difficoltà per frequenza: **0** facile, **1** medio, **2** raro. Calcolato
+da una **lista di frequenza** (rango ≤ 3000 → tier 0, ≤ 12000 → tier 1, resto/assenti
+→ tier 2). Usata da `build-puzzles.js`: easy = tier 0, medium = tier ≤ 1, hard = tutte.
 
 I testi delle definizioni provengono da **Wikizionario** e sono rilasciati sotto
 **Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0)** e GFDL.
 Attribuzione: contributori di it.wiktionary.org. Eventuale ridistribuzione delle
 definizioni deve mantenere la stessa licenza (share-alike) e l'attribuzione.
 
+La lista di frequenza è **hermitdave/FrequencyWords** (`content/2018/it/it_50k.txt`),
+licenza **MIT**, Copyright (c) 2016 Hermit Dave.
+
 Rigenerazione:
 ```
 curl -sL https://dumps.wikimedia.org/itwiktionary/latest/itwiktionary-latest-pages-articles.xml.bz2 -o dump.bz2
-bzip2 -dc dump.bz2 | node scripts/build-dictionary.js
+curl -sL https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/it/it_50k.txt -o it_freq.txt
+bzip2 -dc dump.bz2 | FREQ_FILE=it_freq.txt node scripts/build-dictionary.js
 ```
 
 ## Licenza

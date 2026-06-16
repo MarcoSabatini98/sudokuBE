@@ -7,6 +7,7 @@ const {
   firstDefinition,
   entryFromPage,
   entryFromBlock,
+  tierOf,
 } = require('../scripts/build-dictionary');
 
 describe('build-dictionary – normalizeWord', () => {
@@ -44,8 +45,7 @@ describe('build-dictionary – firstDefinition', () => {
 describe('build-dictionary – entryFromPage', () => {
   it('builds an entry for an Italian lemma', () => {
     const entry = entryFromPage('cane', '== {{-it-}} ==\n{{-sost-|it}}\n# [[animale]] [[domestico]]');
-    expect(entry).toMatchObject({ word: 'CANE', clue: 'animale domestico' });
-    expect(typeof entry.common).toBe('boolean');
+    expect(entry).toEqual({ word: 'CANE', clue: 'animale domestico' });
   });
   it('returns null for inflected forms', () => {
     const entry = entryFromPage('negozia', '== {{-it-}} ==\n{{-verb form-|it}}\n# terza persona di [[negoziare]]');
@@ -65,5 +65,18 @@ describe('build-dictionary – entryFromBlock', () => {
   it('ignores non-main namespaces', () => {
     const block = '<page><title>Wikizionario:Bar</title><ns>4</ns><revision><text>ciao</text></revision>';
     expect(entryFromBlock(block)).toBeNull();
+  });
+});
+
+describe('build-dictionary – tierOf', () => {
+  const ranks = new Map([
+    ['CANE', 100], // molto frequente → tier 0
+    ['SMARGIASSO', 9000], // frequenza media → tier 1
+  ]);
+
+  it('maps frequency rank to a difficulty tier', () => {
+    expect(tierOf('CANE', ranks)).toBe(0);
+    expect(tierOf('SMARGIASSO', ranks)).toBe(1);
+    expect(tierOf('LUCULLIANO', ranks)).toBe(2); // assente dalla lista → raro
   });
 });
