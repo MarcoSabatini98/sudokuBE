@@ -14,10 +14,12 @@ describe('dictionary.service', () => {
     expect(entries.every((e) => /^[A-Z]+$/.test(e.word) && typeof e.clue === 'string')).toBe(true);
   });
 
-  it('marks both common and rare tiers', () => {
+  it('assigns a difficulty tier (0..2) to every entry, with all tiers present', () => {
     const entries = allEntries();
-    expect(entries.some((e) => e.common)).toBe(true);
-    expect(entries.some((e) => !e.common)).toBe(true);
+    expect(entries.every((e) => [0, 1, 2].includes(e.tier))).toBe(true);
+    expect(entries.some((e) => e.tier === 0)).toBe(true);
+    expect(entries.some((e) => e.tier === 1)).toBe(true);
+    expect(entries.some((e) => e.tier === 2)).toBe(true);
   });
 
   it('clueFor returns a definition for a known word, null otherwise', () => {
@@ -34,11 +36,13 @@ describe('dictionary.service', () => {
     expect(clueFor('ODIANDO')).toBeNull();
   });
 
-  it('wordsByLength groups words and can restrict to the common tier', () => {
+  it('wordsByLength groups words and can restrict to a difficulty tier', () => {
     const all = wordsByLength();
-    const common = wordsByLength({ commonOnly: true });
+    const easy = wordsByLength({ maxTier: 0 });
+    const medium = wordsByLength({ maxTier: 1 });
     const count = (m) => [...m.values()].reduce((s, l) => s + l.length, 0);
     expect((all.get(5) || []).length).toBeGreaterThan(10);
-    expect(count(common)).toBeLessThan(count(all));
+    expect(count(easy)).toBeLessThan(count(medium));
+    expect(count(medium)).toBeLessThan(count(all));
   });
 });

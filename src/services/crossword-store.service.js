@@ -10,7 +10,10 @@ const { generateCrossword } = require('./crossword.service');
  */
 async function getServedPuzzle({ difficulty = 'medium' } = {}) {
   const saved = await crosswordRepository.findRandom(difficulty);
-  if (saved) return saved.payload;
+  if (saved) {
+    // MariaDB restituisce le colonne JSON come stringa (JSON = LONGTEXT): normalizza.
+    return typeof saved.payload === 'string' ? JSON.parse(saved.payload) : saved.payload;
+  }
   return generateCrossword({ difficulty });
 }
 

@@ -6,7 +6,7 @@ const {
   MAX_FILL_STEPS,
 } = require('../constants/crossword.constants');
 const { generatePattern, extractSlots } = require('./crossword/pattern');
-const { getIndex, getCommonIndex, fillSlots } = require('./crossword/fill');
+const { getIndex, fillSlots } = require('./crossword/fill');
 const { clueFor } = require('./dictionary.service');
 
 /** Griglia di lettere iniziale: null = casella nera, '' = bianca da riempire. */
@@ -69,35 +69,41 @@ function buildEntries(slots, letterGrid, numberAt) {
  * finché uno si riempie completamente dal dizionario.
  *
  * Opzioni per la pre-generazione offline (a runtime si usano i default):
- * - `commonOnly`: riempi solo con parole comuni (livelli facili). Lento/over-
- *   constrained: NON usare live.
+ * - `maxTier`: limita il vocabolario al tier di difficoltà (0 facile … 2 tutte).
+ *   I tier bassi (pool ridotto) sono lenti/over-constrained: solo offline.
  * - `maxFillSteps`: budget di backtracking (più alto offline).
- * - `blackRatio`: densità di nere; più alta = slot più corti = il pool comune basta.
+ * - `blackRatio`: densità di nere; più alta = slot più corti = il pool ridotto basta.
  */
-function generateCrossword({ difficulty = 'medium', commonOnly = false, maxFillSteps, blackRatio } = {}) {
+/** Un singolo tentativo: pattern → slot → fill. Ritorna lo schema o null. */
+function tryBuild(cfg, index, steps, ratio, difficulty) {
+  const black = generatePattern(cfg.rows, cfg.cols, ratio);
+  const slots = extractSlots(black, cfg.rows, cfg.cols);
+  if (slots.length === 0) return null;
+
+  const assigned = fillSlots(slots, index, steps);
+  if (!assigned) return null;
+
+  const letterGrid = blankGrid(black, cfg.rows, cfg.cols);
+  placeWords(letterGrid, slots, assigned);
+  const { cells, numberAt } = numberCells(letterGrid, cfg.rows, cfg.cols);
+  return {
+    rows: cfg.rows,
+    cols: cfg.cols,
+    difficulty,
+    cells,
+    entries: buildEntries(slots, letterGrid, numberAt),
+  };
+}
+
+function generateCrossword({ difficulty = 'medium', maxTier = 2, maxFillSteps, blackRatio } = {}) {
   const cfg = DIFFICULTY_CONFIG[difficulty] || DIFFICULTY_CONFIG.medium;
-  const index = commonOnly ? getCommonIndex() : getIndex();
+  const index = getIndex(maxTier);
   const steps = maxFillSteps || MAX_FILL_STEPS;
   const ratio = blackRatio || cfg.blackRatio;
 
   for (let attempt = 0; attempt < MAX_PATTERN_ATTEMPTS; attempt++) {
-    const black = generatePattern(cfg.rows, cfg.cols, ratio);
-    const slots = extractSlots(black, cfg.rows, cfg.cols);
-    if (slots.length === 0) continue;
-
-    const assigned = fillSlots(slots, index, steps);
-    if (assigned) {
-      const letterGrid = blankGrid(black, cfg.rows, cfg.cols);
-      placeWords(letterGrid, slots, assigned);
-      const { cells, numberAt } = numberCells(letterGrid, cfg.rows, cfg.cols);
-      return {
-        rows: cfg.rows,
-        cols: cfg.cols,
-        difficulty,
-        cells,
-        entries: buildEntries(slots, letterGrid, numberAt),
-      };
-    }
+    const crossword = tryBuild(cfg, index, steps, ratio, difficulty);
+    if (crossword) return crossword;
   }
   throw new Error('Impossibile generare lo schema di cruciverba');
 }

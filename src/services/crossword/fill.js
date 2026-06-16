@@ -1,36 +1,19 @@
 'use strict';
 
-const { allEntries, wordsByLength } = require('../dictionary.service');
+const { wordsByLength } = require('../dictionary.service');
 const { shuffle } = require('./pattern');
 
-let cachedIndex = null;
-let cachedCommonIndex = null;
-
-/** Indice del dizionario: parole raggruppate per lunghezza. */
-function buildIndex() {
-  const byLen = new Map();
-  for (const { word } of allEntries()) {
-    const list = byLen.get(word.length);
-    if (list) list.push(word);
-    else byLen.set(word.length, [word]);
-  }
-  return { byLen };
-}
-
-/** Indice con tutto il vocabolario (incluse le parole rare). */
-function getIndex() {
-  if (!cachedIndex) cachedIndex = buildIndex();
-  return cachedIndex;
-}
+const indexCache = {};
 
 /**
- * Indice con le sole parole comuni (tier `common`), per la pre-generazione
- * offline dei livelli facili. A runtime NON va usato: il pool ridotto rende il
- * fill over-constrained (thrashing). Vedi crossword-point7-context.md.
+ * Indice del dizionario per il fill: parole per lunghezza, limitate al tier di
+ * difficoltà (maxTier 0 = solo facili … 2 = tutte, incluse le rare).
+ * NB: i tier bassi (pool ridotto) sono pensati per la pre-generazione offline
+ * con budget alto; live possono andare in thrashing.
  */
-function getCommonIndex() {
-  if (!cachedCommonIndex) cachedCommonIndex = { byLen: wordsByLength({ commonOnly: true }) };
-  return cachedCommonIndex;
+function getIndex(maxTier = 2) {
+  if (!indexCache[maxTier]) indexCache[maxTier] = { byLen: wordsByLength({ maxTier }) };
+  return indexCache[maxTier];
 }
 
 /** Per ogni slot, gli incroci con altri slot: {pos, other, otherPos}. */
@@ -131,4 +114,4 @@ function fillSlots(slots, index, maxSteps) {
   }
 }
 
-module.exports = { getIndex, getCommonIndex, fillSlots };
+module.exports = { getIndex, fillSlots };

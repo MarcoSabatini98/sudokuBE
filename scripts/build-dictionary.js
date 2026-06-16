@@ -16,10 +16,16 @@ const path = require('path');
 
 const COMMON = new Set(require('../src/data/wordlist-it.json'));
 const OUT_PATH = path.join(__dirname, '..', 'src', 'data', 'crossword-dictionary.json');
+// Lista di frequenza "parola conteggio" (ordinata per frequenza), per i tier.
+const FREQ_FILE = process.env.FREQ_FILE;
 
 const MIN_LEN = 3;
 const MAX_LEN = 12;
-const MAX_CLUE = 140;
+
+// Soglie di rango nella lista di frequenza per i tier di difficoltà:
+// tier 0 = facile (molto comune), tier 1 = medio, tier 2 = raro (resto/assenti).
+const EASY_RANK = 3000;
+const MEDIUM_RANK = 12000;
 
 const ACCENTS = { à: 'a', á: 'a', è: 'e', é: 'e', ì: 'i', í: 'i', ò: 'o', ó: 'o', ù: 'u', ú: 'u' };
 
@@ -67,8 +73,7 @@ function cleanDefinition(raw) {
   } while (s !== prev);
   s = s.replace(/'''?/g, '').replace(/<!--[\s\S]*?-->/g, '').replace(/<[^>]+>/g, '');
   s = s.replace(/\s+/g, ' ').trim().replace(/^[;:,\s]+|[;:,\s]+$/g, '');
-  if (s.length > MAX_CLUE) s = `${s.slice(0, MAX_CLUE).replace(/\s+\S*$/, '')}…`;
-  return s;
+  return s; // definizione intera, senza troncamento
 }
 
 function firstDefinition(section) {
@@ -88,7 +93,30 @@ function entryFromPage(title, content) {
   if (!section || isOnlyInflectedForm(section)) return null;
   const clue = firstDefinition(section);
   if (!clue) return null;
-  return { word, clue, common: COMMON.has(word) };
+  return { word, clue };
+}
+
+/** Carica la lista di frequenza in una mappa parola→rango (1 = più frequente). */
+function loadFreqRanks(file) {
+  const ranks = new Map();
+  if (!file) return ranks;
+  let rank = 0;
+  for (const line of fs.readFileSync(file, 'utf8').split(/\r?\n/)) {
+    const word = normalizeWord((line.split(/\s+/)[0] || '').trim());
+    if (!word) continue;
+    rank += 1;
+    if (!ranks.has(word)) ranks.set(word, rank);
+  }
+  return ranks;
+}
+
+/** Tier di difficoltà di una parola in base alla frequenza (0 facile … 2 raro). */
+function tierOf(word, ranks) {
+  const rank = ranks.get(word);
+  if (rank !== undefined && rank <= EASY_RANK) return 0;
+  if (rank !== undefined && rank <= MEDIUM_RANK) return 1;
+  if (COMMON.has(word)) return 0; // fallback: le comuni di base restano facili
+  return 2;
 }
 
 /** Estrae la voce da un blocco XML <page>…</page> (solo namespace principale). */
@@ -103,6 +131,7 @@ function entryFromBlock(block) {
 // -- Streaming dello stdin: estrae i blocchi <page>…</page> ------------------
 
 function runFromStdin() {
+  const ranks = loadFreqRanks(FREQ_FILE);
   const seen = new Set();
   const entries = [];
   let buffer = '';
@@ -116,6 +145,7 @@ function runFromStdin() {
       const entry = start === -1 ? null : entryFromBlock(buffer.slice(start, end));
       if (entry && !seen.has(entry.word)) {
         seen.add(entry.word);
+        entry.tier = tierOf(entry.word, ranks);
         entries.push(entry);
       }
       buffer = buffer.slice(end + 7);
@@ -125,8 +155,8 @@ function runFromStdin() {
   process.stdin.on('end', () => {
     entries.sort((a, b) => a.word.localeCompare(b.word));
     fs.writeFileSync(OUT_PATH, `${JSON.stringify(entries)}\n`);
-    const common = entries.filter((e) => e.common).length;
-    process.stdout.write(`voci: ${entries.length} (comuni ${common}, rare ${entries.length - common})\n`);
+    const t = [0, 1, 2].map((k) => entries.filter((e) => e.tier === k).length);
+    process.stdout.write(`voci: ${entries.length} (tier0 ${t[0]}, tier1 ${t[1]}, tier2 ${t[2]})\n`);
   });
 }
 
@@ -138,6 +168,8 @@ module.exports = {
   firstDefinition,
   entryFromPage,
   entryFromBlock,
+  loadFreqRanks,
+  tierOf,
 };
 
 if (require.main === module) runFromStdin();

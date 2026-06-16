@@ -1,8 +1,9 @@
 'use strict';
 
-// Dizionario del cruciverba: { word, clue, common } per ogni voce italiana
-// definibile (incluse le rare, escluse le forme flesse). Generato offline da
-// scripts/build-dictionary.js sul dump di it.wiktionary. Vedi WORDLIST_SOURCE.md.
+// Dizionario del cruciverba: { word, clue, tier } per ogni voce italiana
+// definibile (escluse le forme flesse). tier = difficoltà per frequenza
+// (0 facile, 1 medio, 2 raro). Generato offline da scripts/build-dictionary.js
+// sul dump di it.wiktionary + lista di frequenza. Vedi WORDLIST_SOURCE.md.
 const ENTRIES = require('../data/crossword-dictionary.json');
 
 const BY_WORD = new Map(ENTRIES.map((e) => [e.word, e]));
@@ -31,12 +32,12 @@ function clueFor(word) {
 
 /**
  * Parole raggruppate per lunghezza: Map<number, string[]>.
- * Con `commonOnly` si limita al tier comune (livelli facili).
+ * `maxTier` limita al tier di difficoltà (0 = solo facili … 2 = tutte).
  */
-function wordsByLength({ commonOnly = false } = {}) {
+function wordsByLength({ maxTier = 2 } = {}) {
   const byLen = new Map();
   for (const entry of ENTRIES) {
-    if (commonOnly && !entry.common) continue;
+    if (entry.tier > maxTier) continue;
     const list = byLen.get(entry.word.length) || [];
     list.push(entry.word);
     byLen.set(entry.word.length, list);
