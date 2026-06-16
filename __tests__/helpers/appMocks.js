@@ -12,9 +12,15 @@ function mockDb() {
 
 function mockCoreModels() {
   return {
-    sequelize: { transaction: jest.fn(), authenticate: jest.fn() },
+    sequelize: { transaction: jest.fn(), authenticate: jest.fn(), random: jest.fn(() => 'RAND()') },
     Game: { findAll: jest.fn(), create: jest.fn(), hasOne: jest.fn() },
     Record: { findOne: jest.fn(), create: jest.fn(), findAll: jest.fn(), belongsTo: jest.fn() },
+    CrosswordPuzzle: {
+      findOne: jest.fn(),
+      count: jest.fn(),
+      bulkCreate: jest.fn(),
+      destroy: jest.fn(),
+    },
   };
 }
 
