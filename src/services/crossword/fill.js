@@ -1,9 +1,10 @@
 'use strict';
 
-const { allEntries } = require('../dictionary.service');
+const { allEntries, wordsByLength } = require('../dictionary.service');
 const { shuffle } = require('./pattern');
 
 let cachedIndex = null;
+let cachedCommonIndex = null;
 
 /** Indice del dizionario: parole raggruppate per lunghezza. */
 function buildIndex() {
@@ -16,9 +17,20 @@ function buildIndex() {
   return { byLen };
 }
 
+/** Indice con tutto il vocabolario (incluse le parole rare). */
 function getIndex() {
   if (!cachedIndex) cachedIndex = buildIndex();
   return cachedIndex;
+}
+
+/**
+ * Indice con le sole parole comuni (tier `common`), per la pre-generazione
+ * offline dei livelli facili. A runtime NON va usato: il pool ridotto rende il
+ * fill over-constrained (thrashing). Vedi crossword-point7-context.md.
+ */
+function getCommonIndex() {
+  if (!cachedCommonIndex) cachedCommonIndex = { byLen: wordsByLength({ commonOnly: true }) };
+  return cachedCommonIndex;
 }
 
 /** Per ogni slot, gli incroci con altri slot: {pos, other, otherPos}. */
@@ -119,4 +131,4 @@ function fillSlots(slots, index, maxSteps) {
   }
 }
 
-module.exports = { getIndex, fillSlots };
+module.exports = { getIndex, getCommonIndex, fillSlots };
