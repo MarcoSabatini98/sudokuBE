@@ -20,6 +20,16 @@ describe('crossword/pattern – runLength & patternIsValid', () => {
     const ok = [[false, false, false]]; // run di 3
     expect(patternIsValid(ok, 1, 3)).toBe(true);
   });
+
+  it('rejects a disconnected white region (parole isolate)', () => {
+    // due blocchi 3x3 bianchi separati da una colonna nera → due regioni distinte
+    const disconnected = [
+      [false, false, false, true, false, false, false],
+      [false, false, false, true, false, false, false],
+      [false, false, false, true, false, false, false],
+    ];
+    expect(patternIsValid(disconnected, 3, 7)).toBe(false);
+  });
 });
 
 describe('crossword/pattern – generatePattern', () => {

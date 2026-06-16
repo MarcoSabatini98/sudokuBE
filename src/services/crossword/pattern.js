@@ -24,7 +24,54 @@ function runLength(black, rows, cols, r, c, dr, dc) {
   return len;
 }
 
-/** Pattern valido: nessuna parola da 2, ogni casella bianca in almeno uno slot ≥3. */
+const NEIGHBORS = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+
+/** Conta le caselle bianche e ritorna la prima trovata (start del flood fill). */
+function whiteStats(black, rows, cols) {
+  let start = null;
+  let white = 0;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (black[r][c]) continue;
+      white += 1;
+      if (!start) start = [r, c];
+    }
+  }
+  return { white, start };
+}
+
+function pushWhiteNeighbors(black, rows, cols, seen, stack, r, c) {
+  for (const [dr, dc] of NEIGHBORS) {
+    const nr = r + dr;
+    const nc = c + dc;
+    if (nr < 0 || nc < 0 || nr >= rows || nc >= cols) continue;
+    if (black[nr][nc] || seen[nr][nc]) continue;
+    seen[nr][nc] = true;
+    stack.push([nr, nc]);
+  }
+}
+
+/** true se tutte le caselle bianche formano un'unica regione connessa (4-vicini). */
+function whiteIsConnected(black, rows, cols) {
+  const { white, start } = whiteStats(black, rows, cols);
+  if (!start) return true;
+
+  const seen = makeGrid(rows, cols, false);
+  const stack = [start];
+  seen[start[0]][start[1]] = true;
+  let visited = 0;
+  while (stack.length) {
+    const [r, c] = stack.pop();
+    visited += 1;
+    pushWhiteNeighbors(black, rows, cols, seen, stack, r, c);
+  }
+  return visited === white;
+}
+
+/**
+ * Pattern valido: nessuna parola da 2, ogni casella bianca in almeno uno slot
+ * ≥3, e tutte le bianche connesse (niente parole/zone isolate dal resto).
+ */
 function patternIsValid(black, rows, cols) {
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
@@ -35,7 +82,7 @@ function patternIsValid(black, rows, cols) {
       if (h < MIN_SLOT && v < MIN_SLOT) return false;
     }
   }
-  return true;
+  return whiteIsConnected(black, rows, cols);
 }
 
 /** Genera un pattern di caselle nere a simmetria 180°, fino alla densità voluta. */

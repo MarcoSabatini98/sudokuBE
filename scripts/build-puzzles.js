@@ -9,9 +9,14 @@ require('dotenv').config();
 const { sequelize } = require('../src/models');
 const crosswordRepository = require('../src/repositories/crossword.repository');
 const { generateCrossword } = require('../src/services/crossword.service');
+const { shortenClue } = require('../src/services/crossword/clue');
 const { DIFFICULTIES } = require('../src/constants/crossword.constants');
 
 const COUNT = Number(process.env.PUZZLES_PER_DIFFICULTY) || 12;
+
+// Lunghezza massima delle definizioni per difficoltà (0 = intera).
+// Facile: concise; medio: moderate; difficile: definizione completa/accurata.
+const CLUE_MAX = { easy: 70, medium: 130, hard: 0 };
 
 // Tiering del vocabolario per difficoltà (offline il fill lento è accettabile):
 // - easy: solo parole facili (tier 0); più caselle nere (slot corti) e budget
@@ -24,17 +29,25 @@ const TIER = {
   hard: {},
 };
 
+/** Accorcia le definizioni del payload secondo il limite della difficoltà. */
+function withShortClues(payload, difficulty) {
+  const max = CLUE_MAX[difficulty] || 0;
+  if (!max) return payload;
+  payload.entries = payload.entries.map((e) => ({ ...e, clue: shortenClue(e.clue, max) }));
+  return payload;
+}
+
 function generateOne(difficulty) {
   const opts = TIER[difficulty] || {};
+  let payload;
   try {
-    return generateCrossword({ difficulty, ...opts });
+    payload = generateCrossword({ difficulty, ...opts });
   } catch (err) {
     // pool ristretto può non riempire: allarga di un tier mantenendo la difficoltà
-    if (opts.maxTier !== undefined) {
-      return generateCrossword({ difficulty, maxTier: opts.maxTier + 1, maxFillSteps: 60000 });
-    }
-    throw err;
+    if (opts.maxTier === undefined) throw err;
+    payload = generateCrossword({ difficulty, maxTier: opts.maxTier + 1, maxFillSteps: 60000 });
   }
+  return withShortClues(payload, difficulty);
 }
 
 async function main() {
