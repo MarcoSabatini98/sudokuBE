@@ -1,6 +1,9 @@
 # Claude agent context (local only)
 CLAUDE.md
 
+# Definizioni arricchite con Ollama (generate localmente, opzionali)
+src/data/clue-cache.json
+
 node_modules/
 .env
 dist/

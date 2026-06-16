@@ -1,5 +1,10 @@
 'use strict';
 
+// Cache arricchita (Ollama) simulata: clueFor deve preferirla al dump.
+jest.mock('../src/data/clue-cache.json', () => ({ GATTO: 'Felino di casa che caccia i topi' }), {
+  virtual: true,
+});
+
 const { allEntries, clueFor, wordsByLength } = require('../src/services/dictionary.service');
 
 describe('dictionary.service', () => {
@@ -18,6 +23,10 @@ describe('dictionary.service', () => {
   it('clueFor returns a definition for a known word, null otherwise', () => {
     expect(clueFor('CANE')).toMatch(/animale|mammif/i);
     expect(clueFor('XQZWK')).toBeNull();
+  });
+
+  it('clueFor prefers the enriched clue cache when present', () => {
+    expect(clueFor('GATTO')).toBe('Felino di casa che caccia i topi');
   });
 
   it('does not include inflected verb forms', () => {
