@@ -1,7 +1,7 @@
 'use strict';
 
 const asyncHandler = require('../utils/asyncHandler');
-const { generateCrossword } = require('../services/crossword.service');
+const { getServedPuzzle } = require('../services/crossword-store.service');
 const { sendSuccess, sendFail } = require('../utils/http.response');
 const { DIFFICULTIES } = require('../constants/crossword.constants');
 
@@ -10,7 +10,7 @@ const generate = asyncHandler(async (req, res) => {
   if (!DIFFICULTIES.includes(difficulty)) {
     return sendFail(res, 400, { message: `Difficoltà non valida. Valori: ${DIFFICULTIES.join(', ')}` });
   }
-  const crossword = generateCrossword({ difficulty });
+  const crossword = await getServedPuzzle({ difficulty });
   return sendSuccess(res, 200, crossword);
 });
 
