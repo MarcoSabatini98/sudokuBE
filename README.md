@@ -8,7 +8,7 @@
 
 ### Descrizione
 
-REST API per il gioco del Sudoku. Genera puzzle con soluzione unica, salva le partite e tiene traccia dei record personali per difficoltà.
+REST API multi-gioco: **Sudoku**, **Macchiavelli** (gioco di carte) e **Cruciverba**. Genera puzzle e schemi, salva le partite e tiene traccia dei record personali per difficoltà.
 
 **Stack:** Node.js · Express 5 · Sequelize 6 · MariaDB
 
@@ -211,6 +211,36 @@ Persistenza del gioco di carte Macchiavelli (1 umano vs 3 bot, logica e AI lato 
 
 ---
 
+#### Cruciverba
+
+Cruciverba denso generato dal dizionario italiano (it.wiktionary). Persistenza dei tempi di completamento e del miglior tempo per difficoltà.
+
+| Metodo | Path | Descrizione |
+|---|---|---|
+| `GET`  | `/crossword/generate` | Genera/serve uno schema |
+| `POST` | `/crossword/games` | Salva un completamento |
+| `GET`  | `/crossword/games` | Lista partite con paginazione |
+| `GET`  | `/crossword/records` | Miglior tempo per difficoltà |
+
+**Query `/crossword/generate`:** `difficulty` = `easy` · `medium` · `hard` (default `medium`).
+
+**POST `/crossword/games` — body:**
+```json
+{ "difficulty": "medium", "time_seconds": 540 }
+```
+
+**GET `/crossword/records` — risposta:**
+```json
+{
+  "status": "success",
+  "data": [ { "difficulty": "easy", "best_time_seconds": 240 } ]
+}
+```
+
+> Tabella `crossword_games` creata dalla migration `20260616002-create-crossword-games.js`.
+
+---
+
 ### Test
 
 ```bash
@@ -270,7 +300,7 @@ sudokuBE/
 
 ### Description
 
-REST API for the Sudoku game. Generates puzzles with a unique solution, saves games, and tracks personal records per difficulty.
+Multi-game REST API: **Sudoku**, **Machiavelli** (card game) and **Crossword**. Generates puzzles and grids, saves games, and tracks personal records per difficulty.
 
 **Stack:** Node.js · Express 5 · Sequelize 6 · MariaDB
 
@@ -470,6 +500,36 @@ Persistence for the Macchiavelli card game (1 human vs 3 bots, logic and AI on t
 `best_time_seconds` is `null` until there is at least one win.
 
 > Table `machiavelli_games` created by migration `20260615001-create-machiavelli-games.js`.
+
+---
+
+#### Crossword
+
+Dense crossword generated from the Italian dictionary (it.wiktionary). Persists completion times and the best time per difficulty.
+
+| Method | Path | Description |
+|---|---|---|
+| `GET`  | `/crossword/generate` | Generate/serve a grid |
+| `POST` | `/crossword/games` | Save a completion |
+| `GET`  | `/crossword/games` | List games with pagination |
+| `GET`  | `/crossword/records` | Best time per difficulty |
+
+**Query `/crossword/generate`:** `difficulty` = `easy` · `medium` · `hard` (default `medium`).
+
+**POST `/crossword/games` — body:**
+```json
+{ "difficulty": "medium", "time_seconds": 540 }
+```
+
+**GET `/crossword/records` — response:**
+```json
+{
+  "status": "success",
+  "data": [ { "difficulty": "easy", "best_time_seconds": 240 } ]
+}
+```
+
+> Table `crossword_games` created by migration `20260616002-create-crossword-games.js`.
 
 ---
 

@@ -15,6 +15,7 @@ function mockCoreModels() {
     sequelize: { transaction: jest.fn(), authenticate: jest.fn() },
     Game: { findAll: jest.fn(), create: jest.fn(), hasOne: jest.fn() },
     Record: { findOne: jest.fn(), create: jest.fn(), findAll: jest.fn(), belongsTo: jest.fn() },
+    CrosswordGame: { findAll: jest.fn(), count: jest.fn(), create: jest.fn() },
   };
 }
 
