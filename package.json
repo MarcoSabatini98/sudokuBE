@@ -9,7 +9,7 @@
     "test:coverage": "jest --coverage",
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "db:setup": "sequelize db:create && sequelize db:migrate",
+    "setup": "node scripts/setup.js",
     "migrate": "sequelize db:migrate",
     "migrate:undo": "sequelize db:migrate:undo",
     "migrate:undo:all": "sequelize db:migrate:undo:all",

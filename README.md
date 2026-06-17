@@ -24,39 +24,24 @@ REST API multi-gioco: **Sudoku**, **Macchiavelli** (gioco di carte) e **Cruciver
 ### Installazione
 
 ```bash
-# Clona il repository e installa dipendenze
+# 1. Clona il repository e installa dipendenze
 npm install
 
-# Copia e configura le variabili d'ambiente
+# 2. Copia e configura le variabili d'ambiente
 cp .env.example .env
+# Apri .env e inserisci le tue credenziali MariaDB (DB_USER, DB_PASSWORD, ecc.)
+
+# 3. Setup completo: crea DB + migrazioni + pre-generazione puzzle
+npm run setup
 ```
 
-Modifica `.env` con i tuoi dati:
-
-```env
-PORT=3000
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=sudoku
-DB_USER=sudoku_user
-DB_PASSWORD=password_sicura
-CORS_ORIGIN=http://localhost:4200
-NODE_ENV=development
-```
+Lo script usa le credenziali del tuo `.env` — non servono i privilegi di root, basta un utente MariaDB con `CREATE DATABASE`.
 
 ---
 
 ### Database
 
-```sql
--- Crea database e utente in MariaDB
-CREATE DATABASE sudoku CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'sudoku_user'@'localhost' IDENTIFIED BY 'password_sicura';
-GRANT ALL PRIVILEGES ON sudoku.* TO 'sudoku_user'@'localhost';
-FLUSH PRIVILEGES;
-```
-
-Le tabelle vengono create automaticamente all'avvio (Sequelize `sync`).
+Le tabelle vengono create automaticamente da `npm run setup` tramite le migrazioni Sequelize.
 
 **Tabelle:**
 
@@ -316,39 +301,24 @@ Multi-game REST API: **Sudoku**, **Machiavelli** (card game) and **Crossword**. 
 ### Installation
 
 ```bash
-# Clone the repository and install dependencies
+# 1. Clone the repository and install dependencies
 npm install
 
-# Copy and configure environment variables
+# 2. Copy and configure environment variables
 cp .env.example .env
+# Edit .env with your MariaDB credentials (DB_USER, DB_PASSWORD, etc.)
+
+# 3. Full setup: create DB + run migrations + pre-generate puzzles
+npm run setup
 ```
 
-Edit `.env` with your settings:
-
-```env
-PORT=3000
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=sudoku
-DB_USER=sudoku_user
-DB_PASSWORD=secure_password
-CORS_ORIGIN=http://localhost:4200
-NODE_ENV=development
-```
+The script uses your `.env` credentials — no root access required, just a MariaDB user with `CREATE DATABASE`.
 
 ---
 
 ### Database
 
-```sql
--- Create database and user in MariaDB
-CREATE DATABASE sudoku CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'sudoku_user'@'localhost' IDENTIFIED BY 'secure_password';
-GRANT ALL PRIVILEGES ON sudoku.* TO 'sudoku_user'@'localhost';
-FLUSH PRIVILEGES;
-```
-
-Tables are created automatically on startup (Sequelize `sync`).
+Tables are created automatically by `npm run setup` via Sequelize migrations.
 
 **Tables:**
 
