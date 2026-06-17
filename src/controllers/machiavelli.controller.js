@@ -14,10 +14,10 @@ const save = asyncHandler(async (req, res) => {
   return sendSuccess(res, 201, game);
 });
 
-const getRecord = asyncHandler(async (req, res) => {
-  const record = await machiavelliService.getRecord();
-  return sendSuccess(res, 200, record);
+const getRecords = asyncHandler(async (req, res) => {
+  const records = await machiavelliService.getRecords();
+  return sendSuccess(res, 200, records);
 });
 
 // fallow-ignore-file duplicate-export
-module.exports = { getAll, save, getRecord };
+module.exports = { getAll, save, getRecords };
