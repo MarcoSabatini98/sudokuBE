@@ -1,17 +1,20 @@
 'use strict';
 
+const { fn, col } = require('sequelize');
 const { MachiavelliGame } = require('../models');
 
-const findAll = async ({ page = 1, limit = 20 } = {}) => {
+const findAll = async ({ page = 1, limit = 20, bot_difficulty } = {}) => {
   const offset = (page - 1) * limit;
+  const where = bot_difficulty ? { bot_difficulty } : undefined;
 
   const [data, total] = await Promise.all([
     MachiavelliGame.findAll({
+      where,
       order: [['played_at', 'DESC']],
       limit,
       offset,
     }),
-    MachiavelliGame.count(),
+    MachiavelliGame.count({ where }),
   ]);
 
   return {
@@ -27,12 +30,15 @@ const findAll = async ({ page = 1, limit = 20 } = {}) => {
 
 const create = async (payload) => MachiavelliGame.create(payload);
 
-/** Partita vinta col tempo più breve, oppure null se non ci sono vittorie. */
-const findBestWin = async () =>
-  MachiavelliGame.findOne({
+/** Miglior tempo di vittoria per ciascuna difficoltà bot:
+ *  [{ bot_difficulty, best_time_seconds }]. */
+const bestWinByDifficulty = async () =>
+  MachiavelliGame.findAll({
+    attributes: ['bot_difficulty', [fn('MIN', col('duration_seconds')), 'best_time_seconds']],
     where: { won: true },
-    order: [['duration_seconds', 'ASC']],
+    group: ['bot_difficulty'],
+    raw: true,
   });
 
 // fallow-ignore-file duplicate-export
-module.exports = { findAll, create, findBestWin };
+module.exports = { findAll, create, bestWinByDifficulty };

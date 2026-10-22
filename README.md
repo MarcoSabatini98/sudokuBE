@@ -172,27 +172,27 @@ Persistenza del gioco di carte Macchiavelli (1 umano vs 3 bot, logica e AI lato 
 | Metodo | Path | Descrizione |
 |---|---|---|
 | `POST` | `/machiavelli` | Salva l'esito di una partita |
-| `GET`  | `/machiavelli` | Lista partite con paginazione |
-| `GET`  | `/machiavelli/records` | Miglior tempo di vittoria |
+| `GET`  | `/machiavelli` | Lista partite con paginazione (filtro `?bot_difficulty=`) |
+| `GET`  | `/machiavelli/records` | Miglior tempo di vittoria per difficoltà bot |
 
 **POST `/machiavelli` — body:**
 ```json
-{ "won": true, "duration_seconds": 312 }
+{ "won": true, "duration_seconds": 312, "bot_difficulty": "medium" }
 ```
 
 **GET `/machiavelli/records` — risposta:**
 ```json
 {
   "status": "success",
-  "data": {
-    "best_time_seconds": 240,
-    "best_game": { "id": 5, "won": true, "duration_seconds": 240 }
-  }
+  "data": [
+    { "bot_difficulty": "easy", "best_time_seconds": 180 },
+    { "bot_difficulty": "medium", "best_time_seconds": 240 }
+  ]
 }
 ```
-`best_time_seconds` è `null` finché non c'è almeno una vittoria.
+Il record è il miglior tempo di vittoria per ciascuna difficoltà bot; lista vuota finché non c'è almeno una vittoria.
 
-> Tabella `machiavelli_games` creata dalla migration `20260615001-create-machiavelli-games.js`.
+> Tabella `machiavelli_games` creata dalla migration `20260615001-create-machiavelli-games.js`; colonna `bot_difficulty` aggiunta dalla `20260617001-add-bot-difficulty-to-machiavelli-games.js`.
 
 ---
 
@@ -449,27 +449,27 @@ Persistence for the Macchiavelli card game (1 human vs 3 bots, logic and AI on t
 | Method | Path | Description |
 |---|---|---|
 | `POST` | `/machiavelli` | Save a game result |
-| `GET`  | `/machiavelli` | List games with pagination |
-| `GET`  | `/machiavelli/records` | Best winning time |
+| `GET`  | `/machiavelli` | List games with pagination (`?bot_difficulty=` filter) |
+| `GET`  | `/machiavelli/records` | Best winning time per bot difficulty |
 
 **POST `/machiavelli` — body:**
 ```json
-{ "won": true, "duration_seconds": 312 }
+{ "won": true, "duration_seconds": 312, "bot_difficulty": "medium" }
 ```
 
 **GET `/machiavelli/records` — response:**
 ```json
 {
   "status": "success",
-  "data": {
-    "best_time_seconds": 240,
-    "best_game": { "id": 5, "won": true, "duration_seconds": 240 }
-  }
+  "data": [
+    { "bot_difficulty": "easy", "best_time_seconds": 180 },
+    { "bot_difficulty": "medium", "best_time_seconds": 240 }
+  ]
 }
 ```
-`best_time_seconds` is `null` until there is at least one win.
+The record is the best winning time for each bot difficulty; empty list until there is at least one win.
 
-> Table `machiavelli_games` created by migration `20260615001-create-machiavelli-games.js`.
+> Table `machiavelli_games` created by migration `20260615001-create-machiavelli-games.js`; `bot_difficulty` column added by `20260617001-add-bot-difficulty-to-machiavelli-games.js`.
 
 ---
 
