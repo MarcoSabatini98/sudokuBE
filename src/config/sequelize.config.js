@@ -1,6 +1,8 @@
 'use strict';
 
 require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
 const Joi = require('joi');
 
 const schema = Joi.object({
@@ -10,6 +12,7 @@ const schema = Joi.object({
   DB_PASSWORD: Joi.string().allow('').default(''),
   DB_NAME:     Joi.string().required(),
   DB_TIMEZONE: Joi.string().default('+02:00'),
+  DB_SSL_CA:   Joi.string().allow('').default(''),
 }).unknown(true);
 
 const { error, value: env } = schema.validate(process.env);
@@ -32,6 +35,8 @@ const config = {
   dialectOptions: {
     charset: 'utf8mb4',
     connectTimeout: 10000,
+    // TLS verso DB gestiti (es. Aiven): percorso del certificato CA.
+    ...(env.DB_SSL_CA && { ssl: { ca: fs.readFileSync(path.resolve(env.DB_SSL_CA)) } }),
   },
   logging: process.env.DB_LOGGING === 'true' ? console.log : false,
 };

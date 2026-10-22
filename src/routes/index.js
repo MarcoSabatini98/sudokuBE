@@ -2,8 +2,12 @@
 
 const router = require('express').Router();
 
+router.get('/health', (req, res) => res.json({ status: 'success', data: { ok: true } }));
+
 router.use('/sudoku', require('./sudoku.routes'));
 router.use('/games', require('./game.routes'));
 router.use('/records', require('./record.routes'));
+router.use('/machiavelli', require('./machiavelli.routes'));
+router.use('/crossword', require('./crossword.routes'));
 
 module.exports = router;

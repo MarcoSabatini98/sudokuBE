@@ -14,6 +14,9 @@ const AppError = require('./src/errors/AppError');
 
 const app = express();
 
+// Proxy davanti all'app: Render 1, Vercel + Render 2 (IP reale per il rate limit).
+app.set('trust proxy', Number(process.env.TRUST_PROXY || 1));
+
 app.use(helmet());
 app.use(
   cors({
